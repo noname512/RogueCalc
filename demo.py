@@ -1,7 +1,7 @@
-from random import random
-from PIL import Image
+from enum import Enum
 import wx
 import wx.lib.agw.ultimatelistctrl as ULC
+import wx.adv as ADV
 import json
 import sys, os
 import ctypes
@@ -72,7 +72,7 @@ battle_names = [
     ["人造物狂欢节", "乐理之灾", "亡者行军", "本能污染", "求敌得敌", "混乱的表象", "何处无山海", "生人勿近"],
     ["霜与沙", "生灵的终点"]
 ]
-battle_special_names = ["黄沙幻境", "天途半道", "惩罚", "豪华车队", "英雄无名", "正义使者", "亘古仇敌"]
+battle_special_names = ["呼吸", "大地醒转", "夺树者", "黄沙幻境", "天途半道", "惩罚", "豪华车队", "英雄无名", "正义使者", "亘古仇敌"]
 battle_score = {
     "冰海疑影": 30,
     "狡兽九窟": 30,
@@ -90,13 +90,16 @@ battle_score = {
     "生灵的终点": 80
 }
 battle_special_score = { # [无漏，非无漏]
+    "呼吸": [40, 40],
+    "大地醒转": [40, 40],
+    "夺树者": [40, 40],
     "黄沙幻境": [10, 0],
     "天途半道": [20, 0],
     "惩罚": [20, 0],
     "豪华车队": [30, 0],
     "英雄无名": [20, 0],
     "正义使者": [100, 50],
-    "亘古仇敌": [20, 20]
+    "亘古仇敌": [20, 20],
 }
 special_extra_title = {
     "冰海疑影": ["1个污染躯壳", "17个污染躯壳"],
@@ -112,7 +115,19 @@ special_extra_score = {
     "东/南风向": 10,
     "击杀1个": 15, "击杀2个": 30, "击杀3个": 45, "击杀4个": 60, "击杀5个": 75, "击杀6个": 90
 }
+friend_link = [
+    ("DPS计算器", "https://viktorlab.cn/akdata/dps/"),
+    ("PRTS MAP", "https://mapcn.ark-nights.com/")
+]
+relative_link = [
+    ("UP主应援计划", "https://www.bilibili.com/blackboard/activity-oc3CbeDPRR.html?spm_id_from=333.999.0.0")
+]
 
+class Unit(Enum):
+    BASE = 0
+    ZONG = 1
+
+unit = Unit.ZONG
 
 def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
@@ -129,38 +144,124 @@ if os.name == 'nt':
     font_path = resource_path('font/Novecento WideMedium.otf')
     GDI32.AddFontResourceExW(font_path, 0x10, None)
 
-class CalcFrame(wx.Frame):
-    def __init__(self, parent, title):
-        super(CalcFrame, self).__init__(parent, title=title, size=(1275, 900), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
+class SettingsPanel(wx.Panel):
+    def __init__(self, parent):
+        super(SettingsPanel, self).__init__(parent, style=wx.BORDER_NONE)
 
-        self.panel = wx.Panel(self, style=wx.BORDER_NONE)
-        self.panel.SetBackgroundColour("#F6F6F6")
-        self.panel.Bind(wx.EVT_MOTION, self.on_mouse_move)
-        self.panel.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
-        self.panel.Bind(wx.EVT_LEFT_UP, self.on_left_up)
+        self.SetBackgroundColour("#F6F6F6")
+        self.settings_image = wx.Image(resource_path(f"images/back.png"), wx.BITMAP_TYPE_ANY)
+        self.settings_image = self.settings_image.Scale(32, 32)
+        self.settings_image = wx.Bitmap(self.settings_image)
+        self.settings_icon = wx.StaticBitmap(self, bitmap=self.settings_image, pos=(100, 100))
+        self.settings_icon.Bind(wx.EVT_LEFT_UP, self.on_back_clicked)
+
+        self.Bind(wx.EVT_PAINT, self.on_paint)
+        self.Refresh()
+
+    def on_paint(self, event):
+        dc = wx.PaintDC(self)
+        dc.SetBrush(wx.Brush("#F2F2F2"))
+        dc.SetPen(wx.Pen("#000000", 0))
+        dc.DrawRectangle(0, 0, self.GetSize().GetWidth(), self.GetSize().GetHeight())
+
+    def on_back_clicked(self, event):
+        self.Parent.close_settings()
+
+class InformationPanel(wx.Panel):
+    def __init__(self, parent):
+        super(InformationPanel, self).__init__(parent, style=wx.BORDER_NONE)
+
+        self.SetBackgroundColour("#F6F6F6")
+        self.settings_image = wx.Image(resource_path(f"images/back.png"), wx.BITMAP_TYPE_ANY)
+        self.settings_image = self.settings_image.Scale(32, 32)
+        self.settings_image = wx.Bitmap(self.settings_image)
+        self.settings_icon = wx.StaticBitmap(self, bitmap=self.settings_image, pos=(100, 100))
+        self.settings_icon.Bind(wx.EVT_LEFT_UP, self.on_back_clicked)
+
+        title_font = wx.Font(18, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, "Microsoft YaHei UI")
+        text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
+        self.title_label = wx.StaticText(self, label="友情链接", pos=(100, 170))
+        self.title_label.SetFont(title_font)
+        self.links = []
+        posx, posy = 100, 220
+        for i in range(len(friend_link)):
+            link = ADV.HyperlinkCtrl(self, id=wx.ID_ANY, label=friend_link[i][0], url=friend_link[i][1], pos=(posx, posy))
+            link.SetFont(text_font)
+            link.SetBackgroundColour("#F2F2F2")
+            link.SetSize(wx.Size(link.GetTextExtent(friend_link[i][0])))
+            self.links.append(link)
+            posy += 30
+
+        title_font = wx.Font(18, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, "Microsoft YaHei UI")
+        text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
+        self.title_label = wx.StaticText(self, label="相关链接", pos=(500, 170))
+        self.title_label.SetFont(title_font)
+        self.links = []
+        posx, posy = 500, 220
+        for i in range(len(relative_link)):
+            link = ADV.HyperlinkCtrl(self, id=wx.ID_ANY, label=relative_link[i][0], url=relative_link[i][1], pos=(posx, posy))
+            link.SetFont(text_font)
+            link.SetBackgroundColour("#F2F2F2")
+            link.SetSize(wx.Size(link.GetTextExtent(relative_link[i][0])))
+            self.links.append(link)
+            posy += 30
+
+        self.Bind(wx.EVT_PAINT, self.on_paint)
+        self.Refresh()
+
+    def on_paint(self, event):
+        dc = wx.PaintDC(self)
+        dc.SetBrush(wx.Brush("#F2F2F2"))
+        dc.SetPen(wx.Pen("#000000", 0))
+        dc.DrawRectangle(0, 0, self.GetSize().GetWidth(), self.GetSize().GetHeight())
+
+    def on_back_clicked(self, event):
+        self.Parent.close_information()
+
+class CalcPanel(wx.Panel):
+    def __init__(self, parent):
+        super(CalcPanel, self).__init__(parent, style=wx.BORDER_NONE)
+
+        self.SetBackgroundColour("#F6F6F6")
+        self.Bind(wx.EVT_MOTION, self.on_mouse_move)
+        self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
+        self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
         self.is_mouse_down = False
         title_font = wx.Font(18, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, "Microsoft YaHei UI")
         text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
         final_font = wx.Font(35, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Novecento Wide Medium")
+        final_unit_font = wx.Font(15, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
         bigger_text_font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
         bold_text_font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, "Microsoft YaHei UI")
         self.button_text_font = wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
 
-        self.challenge_title_label = wx.StaticText(self.panel, label="挑战分数", pos=(63, 203))
+        self.settings_image = wx.Image(resource_path(f"images/settings.png"), wx.BITMAP_TYPE_ANY)
+        self.settings_image = self.settings_image.Scale(32, 32)
+        self.settings_image = wx.Bitmap(self.settings_image)
+        self.settings_icon = wx.StaticBitmap(self, bitmap=self.settings_image, pos=(1080, 100))
+        self.settings_icon.Bind(wx.EVT_LEFT_UP, self.on_settings_clicked)
+
+        self.information_image = wx.Image(resource_path(f"images/information.png"), wx.BITMAP_TYPE_ANY)
+        self.information_image = self.information_image.Scale(32, 32)
+        self.information_image = wx.Bitmap(self.information_image)
+        self.information_icon = wx.StaticBitmap(self, bitmap=self.information_image, pos=(1140, 100))
+        self.information_icon.Bind(wx.EVT_LEFT_UP, self.on_information_clicked)
+
+        self.challenge_title_label = wx.StaticText(self, label="挑战分数", pos=(63, 203))
         self.challenge_title_label.SetFont(title_font)
         self.challenge_text_ctrl = []
         self.challenge_choice = []
         self.challenge_label = []
         posy = 245
         for i in range(len(challenge_text)):
-            label = wx.StaticText(self.panel, label=challenge_text[i], pos=(67, posy + 2))
+            label = wx.StaticText(self, label=challenge_text[i], pos=(67, posy + 2))
             label.SetFont(text_font)
             self.challenge_label.append(label)
 
             if i < 5:
-                text_ctrl = wx.TextCtrl(self.panel, value="0", pos=(303, posy), size=(50, 26), style=wx.TE_CENTER)
+                text_ctrl = wx.TextCtrl(self, value="0", pos=(303, posy), size=(50, 26), style=wx.TE_CENTER)
                 text_ctrl.SetFont(text_font)
                 text_ctrl.SetBackgroundColour("#EFEFEF")
                 text_ctrl.SetForegroundColour("#808080")
@@ -168,14 +269,14 @@ class CalcFrame(wx.Frame):
                 text_ctrl.Bind(wx.EVT_CHAR, self.on_char)
                 self.challenge_text_ctrl.append(text_ctrl)
             else:
-                choice = wx.Choice(self.panel, wx.ID_ANY, choices=yes_no_choice, pos=(303, posy), size=(50, 26))
-                choice.SetSelection(-1)
+                choice = wx.Choice(self, wx.ID_ANY, choices=yes_no_choice, pos=(303, posy), size=(50, 26))
+                choice.SetSelection(1)
                 choice.SetFont(text_font)
                 choice.Bind(wx.EVT_CHOICE, self.on_choice)
                 self.challenge_choice.append(choice)
             posy += 32
 
-        self.boss_title_label = wx.StaticText(self.panel, label="结局分数", pos=(63, 513))
+        self.boss_title_label = wx.StaticText(self, label="结局分数", pos=(63, 513))
         self.boss_title_label.SetFont(title_font)
         self.boss_button = []
         posx = 69
@@ -183,7 +284,7 @@ class CalcFrame(wx.Frame):
         for i in range(len(boss_selected)):
             image = wx.Bitmap(resource_path(f"images/{boss_image_names[i]}.png"), wx.BITMAP_TYPE_ANY)
             boss_images.append(image)
-            button = wx.BitmapButton(self.panel, i, image, pos=(posx, posy), size=(64, 64))
+            button = wx.BitmapButton(self, 100 + i, image, pos=(posx, posy), size=(64, 64))
             button.Bind(wx.EVT_BUTTON, self.on_button_clicked)
             self.boss_button.append(button)
             if i % 4 == 3:
@@ -193,13 +294,13 @@ class CalcFrame(wx.Frame):
                 posx += 72
         self.boss_image_show()
 
-        self.battle_title_label = wx.StaticText(self.panel, label="关卡分数", pos=(473, 203))
+        self.battle_title_label = wx.StaticText(self, label="关卡分数", pos=(473, 203))
         self.battle_title_label.SetFont(title_font)
         self.battle_label = []
         self.battle_choice = []
         posy = 245
         for i in range(len(battle_text)):
-            label = wx.StaticText(self.panel, label=battle_text[i], pos=(477, posy + 2))
+            label = wx.StaticText(self, label=battle_text[i], pos=(477, posy + 2))
             label.SetFont(text_font)
             self.battle_label.append(label)
 
@@ -208,7 +309,7 @@ class CalcFrame(wx.Frame):
                 choices = battle_types
             elif 3 <= i <= 5:
                 choices = yes_no_choice
-            choice = wx.Choice(self.panel, i + 20, choices=choices, pos=(633, posy), size=(130, 26))
+            choice = wx.Choice(self, i + 20, choices=choices, pos=(633, posy), size=(130, 26))
             if 3 <= i <= 5:
                 choice.SetSelection(1)
             else:
@@ -217,47 +318,51 @@ class CalcFrame(wx.Frame):
             choice.Bind(wx.EVT_CHOICE, self.on_choice)
             self.battle_choice.append(choice)
             posy += 32
-        self.confirm_button = wx.Button(self.panel, wx.ID_ANY, label="添加", pos=(475, posy + 3), size=(290, 35))
+        self.confirm_button = wx.Button(self, wx.ID_ANY, label="添加", pos=(475, posy + 3), size=(290, 35))
         self.confirm_button.SetFont(bigger_text_font)
         self.confirm_button.Bind(wx.EVT_BUTTON, self.on_confirm)
 
-        self.settlement_title_label = wx.StaticText(self.panel, label="结算分数", pos=(473, 543))
+        self.settlement_title_label = wx.StaticText(self, label="结算分数", pos=(473, 543))
         self.settlement_title_label.SetFont(title_font)
-        self.settlement_ctrl = wx.TextCtrl(self.panel, value="0", pos=(643, 543), size=(120, 30), style=wx.TE_CENTER)
+        self.settlement_ctrl = wx.TextCtrl(self, value="0", pos=(643, 543), size=(120, 30), style=wx.TE_CENTER)
         self.settlement_ctrl.SetFont(bigger_text_font)
         self.settlement_ctrl.SetBackgroundColour("#EFEFEF")
         self.settlement_ctrl.SetForegroundColour("#808080")
         self.settlement_ctrl.Bind(wx.EVT_TEXT, self.on_text)
         self.settlement_ctrl.Bind(wx.EVT_CHAR, self.on_char)
 
-        self.battle_total_title_label = wx.StaticText(self.panel, label="关卡分数一览", pos=(883, 203))
+        self.battle_total_title_label = wx.StaticText(self, label="关卡分数一览", pos=(883, 203))
         self.battle_total_title_label.SetFont(title_font)
-        self.battle_total_delete_button = wx.Button(self.panel, label="删除", pos=(1100, 203), size=(80, 35))
+        self.battle_total_delete_button = wx.Button(self, label="删除", pos=(1100, 203), size=(80, 35))
         self.battle_total_delete_button.SetFont(bigger_text_font)
         self.battle_total_delete_button.Bind(wx.EVT_BUTTON, self.on_delete)
-        self.list_ctrl = ULC.UltimateListCtrl(self.panel, pos=(880, 240), size=(300, 525), agwStyle=ULC.ULC_REPORT | ULC.ULC_NO_HEADER)
+        self.list_ctrl = ULC.UltimateListCtrl(self, pos=(880, 240), size=(300, 525), agwStyle=ULC.ULC_REPORT | ULC.ULC_NO_HEADER)
         self.list_ctrl.SetBackgroundColour("#F2F2F2")
         self.list_ctrl.InsertColumn(0, "", width=175)
         self.list_ctrl.InsertColumn(1, "", wx.LIST_FORMAT_RIGHT, width=120)
         self.list_ctrl.SetFont(text_font)
 
-        self.calc_text = wx.StaticText(self.panel, label="0", style=wx.ALIGN_CENTER, pos=(600, 700))
+        self.calc_text = wx.StaticText(self, label="0", style=wx.ALIGN_CENTER, pos=(600, 700))
         self.calc_text.SetFont(final_font)
         self.calc_text.SetForegroundColour("#B7D5F7")
         self.calc_text.SetBackgroundColour("#F2F2F2")
         self.calc_text.SetPosition((620 - self.calc_text.GetSize().GetWidth() // 2, 700 - self.calc_text.GetSize().GetHeight() // 2))
-        self.calc_title_text = wx.StaticText(self.panel, label="总分！", style=wx.ALIGN_CENTER, pos=(600, 650))
+        self.calc_unit_text = wx.StaticText(self, label="", style=wx.ALIGN_CENTER, pos=(600, 700))
+        self.calc_unit_text.SetFont(final_unit_font)
+        self.calc_unit_text.SetForegroundColour("#B7D5F7")
+        self.calc_unit_text.SetBackgroundColour("#F2F2F2")
+        self.calc_title_text = wx.StaticText(self, label="总分！", style=wx.ALIGN_CENTER, pos=(600, 650))
         self.calc_title_text.SetFont(bold_text_font)
         self.calc_title_text.SetBackgroundColour("#F2F2F2")
         self.calc_title_text.SetPosition((620 - self.calc_title_text.GetSize().GetWidth() // 3, 690 - self.calc_text.GetSize().GetHeight() // 2 - self.calc_title_text.GetSize().GetHeight() // 2))
-        self.calc_hint_text = wx.StaticText(self.panel, label="", pos=(477, 738))
+        self.calc_hint_text = wx.StaticText(self, label="", pos=(477, 738))
         self.calc_hint_text.SetFont(text_font)
 
-        self.panel.Bind(wx.EVT_PAINT, self.on_paint)
+        self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Refresh()
 
     def on_paint(self, event):
-        dc = wx.PaintDC(self.panel)
+        dc = wx.PaintDC(self)
         dc.SetBrush(wx.Brush("#F2F2F2"))
         dc.SetPen(wx.Pen("#000000", 1))
         dc.DrawRoundedRectangle(60, 240, 300, 235, 7) # 挑战分数
@@ -322,7 +427,7 @@ class CalcFrame(wx.Frame):
         self.calc()
 
     def on_button_clicked(self, event):
-        button_id = event.GetId()
+        button_id = event.GetId() - 100
         if button_id == 1:
             boss_selected[1] = (boss_selected[1] + 1) % 3
         else:
@@ -450,8 +555,14 @@ class CalcFrame(wx.Frame):
             item = self.list_ctrl.GetItem(i, 1)
             total += int(item.GetText())
 
-        self.calc_text.SetLabelText(str(total))
-        self.calc_text.SetPosition((620 - self.calc_text.GetSize().GetWidth() // 2, 700 - self.calc_text.GetSize().GetHeight() // 2))
+        if unit == Unit.BASE:
+            self.calc_text.SetLabelText(str(total))
+            self.calc_text.SetPosition((620 - self.calc_text.GetSize().GetWidth() // 2, 700 - self.calc_text.GetSize().GetHeight() // 2))
+        else:
+            self.calc_text.SetLabelText(f"{total / 21.0:.2f}")
+            self.calc_unit_text.SetLabelText("粽")
+            self.calc_text.SetPosition((620 - self.calc_text.GetSize().GetWidth() // 2, 700 - self.calc_text.GetSize().GetHeight() // 2))
+            self.calc_unit_text.SetPosition((self.calc_text.GetPosition().x + self.calc_text.GetSize().GetWidth() + 5, (self.calc_text.GetPosition().y + self.calc_text.GetSize().GetHeight() - self.calc_unit_text.GetSize().GetHeight() - 10)))
     
     def on_mouse_move(self, event):
         x, y = event.GetPosition()
@@ -481,7 +592,7 @@ class CalcFrame(wx.Frame):
             for i in self.challenge_text_ctrl:
                 i.SetValue("0")
             for i in self.challenge_choice:
-                i.SetSelection(-1)
+                i.SetSelection(1)
             for i in range(len(boss_selected)):
                 boss_selected[i] = 0
             self.settlement_ctrl.SetValue("0")
@@ -489,6 +600,50 @@ class CalcFrame(wx.Frame):
             self.boss_image_show()
             self.calc()
         self.timer.Stop()
+    
+    def on_settings_clicked(self, event):
+        self.Parent.open_settings()
+    
+    def on_information_clicked(self, event):
+        self.Parent.open_information()
+
+class CalcFrame(wx.Frame):
+    def __init__(self, parent, title):
+        super(CalcFrame, self).__init__(parent, title=title, size=(1275, 900), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
+
+        self.calc_panel = CalcPanel(self)
+        self.settings_panel = SettingsPanel(self)
+        self.information_panel = InformationPanel(self)
+        self.Sizer = wx.BoxSizer(wx.VERTICAL)
+        self.Sizer.Add(self.calc_panel, 1, wx.EXPAND)
+    
+    def open_settings(self):
+        self.settings_panel.Show()
+        self.calc_panel.Hide()
+        self.Sizer.Remove(0)
+        self.Sizer.Add(self.settings_panel, 1, wx.EXPAND)
+        self.Layout()
+    
+    def close_settings(self):
+        self.calc_panel.Show()
+        self.settings_panel.Hide()
+        self.Sizer.Remove(0)
+        self.Sizer.Add(self.calc_panel, 1, wx.EXPAND)
+        self.Layout()
+    
+    def open_information(self):
+        self.information_panel.Show()
+        self.calc_panel.Hide()
+        self.Sizer.Remove(0)
+        self.Sizer.Add(self.information_panel, 1, wx.EXPAND)
+        self.Layout()
+    
+    def close_information(self):
+        self.calc_panel.Show()
+        self.information_panel.Hide()
+        self.Sizer.Remove(0)
+        self.Sizer.Add(self.calc_panel, 1, wx.EXPAND)
+        self.Layout()
 
 if __name__ == "__main__":
     app = wx.App(False)
