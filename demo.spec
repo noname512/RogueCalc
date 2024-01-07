@@ -3,7 +3,7 @@
 
 a = Analysis(
     ['demo.py'],
-    datas=[('images', 'images'), ('font', 'font')],
+    datas=[('images', 'images'), ('font', 'font'), ('settings', 'settings')],
     pathex=[],
     binaries=[],
     hiddenimports=[],

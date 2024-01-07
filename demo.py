@@ -79,8 +79,19 @@ friend_link = [
     ("PRTS MAP", "https://mapcn.ark-nights.com/")
 ]
 relative_link = [
-    ("UP主应援计划", "https://www.bilibili.com/blackboard/activity-oc3CbeDPRR.html?spm_id_from=333.999.0.0")
+    ("UP主应援计划", "https://www.bilibili.com/blackboard/activity-oc3CbeDPRR.html")
 ]
+credits_link = {
+    "程序：" : [
+        ("_noname", "https://space.bilibili.com/22275485")
+    ],
+    "美术：" : [
+        ("里雪りあ", "https://space.bilibili.com/1684845011")
+    ],
+    "规则：" : [
+
+    ]
+}
 
 class Unit(Enum):
     BASE = 0
@@ -210,10 +221,10 @@ class InformationPanel(wx.Panel):
 
         title_font = wx.Font(18, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, "Microsoft YaHei UI")
         text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
-        self.title_label = wx.StaticText(self, label="友情链接", pos=(100, 170))
-        self.title_label.SetFont(title_font)
+        self.friend_title_label = wx.StaticText(self, label="友情链接", pos=(200, 170))
+        self.friend_title_label.SetFont(title_font)
         self.links = []
-        posx, posy = 100, 220
+        posx, posy = 200, 220
         for i in range(len(friend_link)):
             link = ADV.HyperlinkCtrl(self, id=wx.ID_ANY, label=friend_link[i][0], url=friend_link[i][1], pos=(posx, posy))
             link.SetFont(text_font)
@@ -222,11 +233,8 @@ class InformationPanel(wx.Panel):
             self.links.append(link)
             posy += 30
 
-        title_font = wx.Font(18, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, "Microsoft YaHei UI")
-        text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
-        self.title_label = wx.StaticText(self, label="相关链接", pos=(500, 170))
-        self.title_label.SetFont(title_font)
-        self.links = []
+        self.relative_title_label = wx.StaticText(self, label="相关链接", pos=(500, 170))
+        self.relative_title_label.SetFont(title_font)
         posx, posy = 500, 220
         for i in range(len(relative_link)):
             link = ADV.HyperlinkCtrl(self, id=wx.ID_ANY, label=relative_link[i][0], url=relative_link[i][1], pos=(posx, posy))
@@ -235,6 +243,25 @@ class InformationPanel(wx.Panel):
             link.SetSize(wx.Size(link.GetTextExtent(relative_link[i][0])))
             self.links.append(link)
             posy += 30
+
+        self.credit_title_label = wx.StaticText(self, label="制作人员", pos=(800, 170))
+        self.credit_title_label.SetFont(title_font)
+        posy = 220
+        self.credit_label = []
+        for key, value in credits_link.items():
+            posx = 800
+            label = wx.StaticText(self, label=key, pos=(posx, posy))
+            label.SetFont(text_font)
+            posx += label.GetSize().GetWidth() + 5
+            self.credit_label.append(label)
+
+            for val in value:
+                link = ADV.HyperlinkCtrl(self, id=wx.ID_ANY, label=val[0], url=val[1], pos=(posx, posy))
+                link.SetFont(text_font)
+                link.SetBackgroundColour("#F2F2F2")
+                link.SetSize(wx.Size(link.GetTextExtent(val[0])))
+                posy += 30
+                self.links.append(link)
 
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Refresh()
