@@ -480,10 +480,14 @@ class CalcPanel(wx.Panel):
         if id == 20:
             self.battle_choice[1].SetSelection(-1)
             self.battle_choice[2].SetSelection(-1)
+            self.battle_choice[4].SetSelection(-1)
             self.battle_choice[5].SetSelection(-1)
+            self.battle_choice[6].SetSelection(-1)
             self.battle_choice[1].Clear()
             self.battle_choice[2].Clear()
+            self.battle_choice[4].Clear()
             self.battle_choice[5].Clear()
+            self.battle_choice[6].Clear()
             if choice.GetSelection() == 0:
                 self.battle_choice[1].AppendItems(battle_levels)
                 self.battle_choice[5].AppendItems(yes_no_choice)
