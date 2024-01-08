@@ -385,14 +385,15 @@ class CalcPanel(wx.Panel):
             elif 3 <= i <= 5:
                 choices = yes_no_choice
             choice = wx.Choice(self, i + 20, choices=choices, pos=(643, posy), size=(130, 26))
-            if 3 <= i <= 5:
+            if i != 0 and i != 3:
+                choice.Disable()
+            if i == 3:
                 choice.SetSelection(1)
-            else:
-                choice.SetSelection(-1)
             choice.SetFont(text_font)
             choice.Bind(wx.EVT_CHOICE, self.on_choice)
             self.battle_choice.append(choice)
             posy += 32
+
         self.confirm_button = wx.Button(self, wx.ID_ANY, label="添加", pos=(475, posy + 3), size=(300, 35))
         self.confirm_button.SetFont(bigger_text_font)
         self.confirm_button.Bind(wx.EVT_BUTTON, self.on_confirm)
@@ -548,34 +549,41 @@ class CalcPanel(wx.Panel):
         id = event.GetId()
         choice = event.GetEventObject()
         if id == 20:
-            self.battle_choice[1].SetSelection(-1)
-            self.battle_choice[2].SetSelection(-1)
-            self.battle_choice[4].SetSelection(-1)
-            self.battle_choice[5].SetSelection(-1)
-            self.battle_choice[6].SetSelection(-1)
             self.battle_choice[1].Clear()
             self.battle_choice[2].Clear()
             self.battle_choice[4].Clear()
             self.battle_choice[5].Clear()
             self.battle_choice[6].Clear()
             if choice.GetSelection() == 0:
+                self.battle_choice[1].Enable()
                 self.battle_choice[1].AppendItems(battle_levels)
+                self.battle_choice[2].Disable()
+                self.battle_choice[4].Enable()
+                self.battle_choice[5].Enable()
                 self.battle_choice[4].AppendItems(yes_no_choice)
                 self.battle_choice[4].SetSelection(1)
                 self.battle_choice[5].AppendItems(yes_no_choice)
                 self.battle_choice[5].SetSelection(1)
+                self.battle_choice[6].Disable()
             else:
+                self.battle_choice[2].Enable()
                 self.battle_choice[2].AppendItems(battle_special_names)
+                self.battle_choice[1].Disable()
+                self.battle_choice[4].Disable()
+                self.battle_choice[5].Disable()
+                self.battle_choice[6].Disable()
         elif id == 21:
-            self.battle_choice[2].SetSelection(-1)
+            self.battle_choice[2].Enable()
             self.battle_choice[2].Clear()
             self.battle_choice[2].AppendItems(battle_names[self.battle_choice[1].GetSelection()])
+            self.battle_choice[6].Disable()
         elif id == 22:
-            self.battle_choice[6].SetSelection(-1)
             self.battle_choice[6].Clear()
             name = self.battle_choice[2].GetStringSelection()
             if name in special_extra_title.keys():
+                self.battle_choice[6].Enable()
                 self.battle_choice[6].AppendItems(special_extra_title[name])
+                self.battle_choice[6].SetSelection(0)
 
         self.calc()
 
