@@ -18,7 +18,6 @@ challenge_score = []
 unique_challenge_text = []
 unique_challenge_score = []
 boss_score = []
-sentinel_base_score = 0
 boss_selected = [0] * 12
 boss_image_names = [
     "boss_4",
@@ -128,7 +127,7 @@ if os.name == 'nt':
     GDI32.AddFontResourceExW(resource_path('font/HARMONYOS_SANS_SC_REGULAR.TTF'), 0x10, None)
 
 def init_settings():
-    global boss_score, sentinel_base_score, battle_score, battle_special_score, two_ending, three_ending, both_three_four_ending
+    global boss_score, battle_score, battle_special_score, two_ending, three_ending, both_three_four_ending
     with open(resource_path(config_path[config]), 'r', encoding='utf-8') as file:
         data = json.load(file)
         challenge_text.clear()
@@ -149,7 +148,6 @@ def init_settings():
         boss_score = data.get("boss_score", [0] * 12)
         if len(boss_score) != 12:
             return False
-        sentinel_base_score = data.get("sentinel_base_score", 0)
         two_ending = data.get("two_ending", 0)
         three_ending = data.get("three_ending", 0)
         both_three_four_ending = data.get("both_three_four_ending", 0)
@@ -472,10 +470,10 @@ class CalcPanel(wx.Panel):
         self.button_text_font = wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
 
         self.settings_image = wx.Bitmap(resource_path(f"images/settings.png"), wx.BITMAP_TYPE_ANY)
-        self.settings_rect = wx.Rect(1110, 100, 40, 40)
+        self.settings_rect = wx.Rect(1110, 80, 40, 40)
 
         self.information_image = wx.Bitmap(resource_path(f"images/information.png"), wx.BITMAP_TYPE_ANY)
-        self.information_rect = wx.Rect(1170, 100, 40, 40)
+        self.information_rect = wx.Rect(1170, 80, 40, 40)
 
         self.delete_image = wx.Bitmap(resource_path(f"images/delete.png"), wx.BITMAP_TYPE_ANY)
         self.delete_rect = wx.Rect(1168, 205, 37, 26)
@@ -723,9 +721,6 @@ class CalcPanel(wx.Panel):
 
     def on_button_clicked(self, event):
         button_id = event.GetId() - 100
-        # if button_id == 1:
-        #     boss_selected[1] = (boss_selected[1] + 1) % 3
-        # else:
         boss_selected[button_id] = 2 - boss_selected[button_id]
         if boss_selected[2] + boss_selected[3] + boss_selected[6] > 2:
             boss_selected[2] = 0
@@ -835,8 +830,6 @@ class CalcPanel(wx.Panel):
         for i in range(len(boss_selected)):
             if boss_selected[i] == 2:
                 total += boss_score[i]
-            # elif i == 1 and boss_selected[i] == 1:
-            #     total += sentinel_base_score
         boss_cnt = 0
         for i in range(7):
             if boss_selected[i] == 2:
