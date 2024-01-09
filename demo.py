@@ -392,21 +392,25 @@ class BattlePanel():
         self.rect = rect
         
         self.list = []
+        self.detail_list = []
         self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
         self.highlight = -1
         self.true_highlight = -1
 
-    def add_item(self, name, score):
+    def add_item(self, name, score, detail):
         self.list.append((name, score))
+        self.detail_list.append(detail)
         self.refresh()
     
     def remove_all_items(self):
         self.list.clear()
+        self.detail_list.clear()
         self.refresh()
     
     def delete_item(self):
         if self.true_highlight != -1 and self.true_highlight < len(self.list):
             self.list.pop(self.true_highlight)
+            self.detail_list.pop(self.true_highlight)
             self.true_highlight = -1
             self.refresh()
     
@@ -417,6 +421,29 @@ class BattlePanel():
     
     def refresh(self):
         self.parent.RefreshRect(self.rect)
+    
+    def recalc(self):
+        for i in range(len(self.list)):
+            name = self.list[i][0]
+            total = 0
+            if self.detail_list[i][0] == 0:
+                if name in battle_score.keys():
+                    total += battle_score[name]
+                if self.detail_list[i][2] == 0:
+                    total += 20
+                times = 1.0
+                if self.detail_list[i][1] == 0:
+                    times += 0.2
+                if self.detail_list[i][3] == 0:
+                    times -= 0.7
+                total *= times
+            else:
+                total = battle_special_score[name][self.detail_list[i][1]]
+            extra_item = self.detail_list[i][4]
+            if extra_item in special_extra_score.keys():
+                total += special_extra_score[extra_item]
+
+            self.list[i] = (name, str(int(total)))
 
     def get_total_score(self):
         ret = 0
@@ -752,7 +779,12 @@ class CalcPanel(wx.Panel):
 
         if battle_total > 0 and battle_name != "":
             print(f"新增战斗：{battle_name}，得分为{battle_total}")
-            self.list_ctrl.add_item(battle_name, str(int(battle_total)))
+            self.list_ctrl.add_item(battle_name, str(int(battle_total)), 
+                                    (self.battle_choice[0].GetSelection(),
+                                     self.battle_choice[3].GetSelection(),
+                                     self.battle_choice[4].GetSelection(),
+                                     self.battle_choice[5].GetSelection(),
+                                     self.battle_choice[6].GetStringSelection()))
             self.calc()
     
     def on_delete(self):
@@ -925,7 +957,7 @@ class CalcFrame(wx.Frame):
         if reset:
             init_settings()
             self.calc_panel.init_challenge()
-            self.calc_panel.reset()
+            self.calc_panel.list_ctrl.recalc()
         self.calc_panel.calc()
         self.settings_panel.Hide()
         self.Sizer.Remove(0)
