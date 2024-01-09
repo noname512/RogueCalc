@@ -6,11 +6,12 @@ import wx.adv as ADV
 import json
 import sys, os
 import ctypes
+import webbrowser
 
 background_color = "#F3F3F3"
 foreground_color = "#276CBC"
 fake_background = "#F9FAFC"
-block_color = "#F3F3F3"
+outline_color = "#B7D5F7"
 yes_no_choice = ["是", "否"]
 challenge_text = []
 challenge_score = []
@@ -80,29 +81,30 @@ battle_special_score = dict() # [无漏，非无漏]
 special_extra_title = dict()
 special_extra_score = dict()
 friend_link = [
-    ("DPS计算器", "https://viktorlab.cn/akdata/dps/"),
-    ("PRTS MAP", "https://mapcn.ark-nights.com/")
+    ("tomimi", "https://tomimi.cyou/zh/sami", "tomimi"),
+    ("DPS计算器", "https://viktorlab.cn/akdata/dps/", "dpscalc"),
+    ("PRTS MAP", "https://mapcn.ark-nights.com/areas/rogue_3", "prtsmap")
 ]
 relative_link = [
-    ("UP主应援计划", "https://www.bilibili.com/blackboard/activity-oc3CbeDPRR.html")
+    ("UP主应援计划", "https://www.bilibili.com/blackboard/activity-oc3CbeDPRR.html"),
+    ("比赛直播间", "https://live.bilibili.com/22476160")
 ]
 credits_link = {
     "程序：" : [
         ("_noname", "https://space.bilibili.com/22275485")
     ],
     "美术：" : [
-        ("里雪りあ", "https://space.bilibili.com/1684845011")
+        ("里雪りあ", "https://space.bilibili.com/1684845011"),
+        ("無冕Crownless", "https://space.bilibili.com/12786648")
     ],
     "规则：" : [
 
     ]
 }
 
-class Unit(Enum):
-    BASE = 0
-    ZONG = 1
-
-unit = Unit.BASE
+use_special_unit = False
+unit = ""
+unit_score = 1
 config = 0
 config_path = [
     "settings/demo.json",
@@ -123,6 +125,7 @@ if os.name == 'nt':
 
     GDI32.AddFontResourceExW(resource_path('font/Novecento WideMedium.otf'), 0x10, None)
     GDI32.AddFontResourceExW(resource_path('font/标小智无界黑.TTF'), 0x10, None)
+    GDI32.AddFontResourceExW(resource_path('font/HARMONYOS_SANS_SC_REGULAR.TTF'), 0x10, None)
 
 def init_settings():
     global boss_score, sentinel_base_score, battle_score, battle_special_score, two_ending, three_ending, both_three_four_ending
@@ -166,23 +169,39 @@ class SettingsPanel(wx.Panel):
     def __init__(self, parent):
         super(SettingsPanel, self).__init__(parent, style=wx.BORDER_NONE)
 
-        self.settings_image = wx.Image(resource_path(f"images/back.png"), wx.BITMAP_TYPE_ANY)
-        self.settings_image = self.settings_image.Scale(32, 32)
-        self.settings_image = wx.Bitmap(self.settings_image)
-        self.settings_icon = wx.StaticBitmap(self, bitmap=self.settings_image, pos=(70, 170))
-        self.settings_icon.Bind(wx.EVT_LEFT_UP, self.on_back_clicked)
+        self.back_image = wx.Bitmap(resource_path(f"images/back.png"), wx.BITMAP_TYPE_ANY)
+        self.back_rect = wx.Rect(70, 170, 40, 40)
+        self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
 
-        self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
-        self.settings_unit_choice = wx.Choice(self, choices=["分", "棕"], pos=(220, 220), size=(100, 30))
-        self.settings_unit_choice.SetSelection(unit.value)
-        self.settings_unit_choice.SetFont(self.text_font)
-        self.settings_unit_choice.Bind(wx.EVT_CHOICE, self.on_unit_choice)
+        self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
+        self.title_font = wx.Font(25, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "标小智无界黑")
 
-        self.settings_config_choice = wx.Choice(self, choices=["标准配置", "测试配置"], pos=(220, 260), size=(100, 30))
+        self.settings_config_choice = wx.Choice(self, choices=["标准配置", "测试配置"], pos=(400, 275), size=(100, 30))
         self.settings_config_choice.SetSelection(config)
         self.settings_config_choice.SetFont(self.text_font)
         self.settings_config_choice.Bind(wx.EVT_CHOICE, self.on_config_choice)
         self.last_config = config
+
+        self.settings_unit_choice = wx.Choice(self, choices=yes_no_choice, pos=(400, 455), size=(100, 30))
+        self.settings_unit_choice.SetSelection(1 - int(use_special_unit))
+        self.settings_unit_choice.SetFont(self.text_font)
+        self.settings_unit_choice.Bind(wx.EVT_CHOICE, self.on_unit_choice)
+
+        self.unit_ctrl = wx.TextCtrl(self, id=1001, pos=(425, 494), size=(90, 24), style=wx.TE_CENTER | wx.NO_BORDER)
+        self.unit_ctrl.SetFont(self.text_font)
+        self.unit_ctrl.SetBackgroundColour(fake_background)
+        self.unit_ctrl.SetValue(unit)
+
+        self.unit_score_ctrl = wx.TextCtrl(self, id=1002, pos=(565, 494), size=(90, 24), style=wx.TE_CENTER | wx.NO_BORDER)
+        self.unit_score_ctrl.SetFont(self.text_font)
+        self.unit_score_ctrl.SetBackgroundColour(fake_background)
+        self.unit_score_ctrl.SetValue(str(unit_score))
+        self.unit_score_ctrl.Bind(wx.EVT_TEXT, self.on_text)
+        self.unit_score_ctrl.Bind(wx.EVT_CHAR, self.on_char)
+
+        if not use_special_unit:
+            self.unit_ctrl.Hide()
+            self.unit_score_ctrl.Hide()
 
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Refresh()
@@ -190,52 +209,115 @@ class SettingsPanel(wx.Panel):
     def on_paint(self, event):
         dc = wx.PaintDC(self)
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
+        dc.SetPen(wx.Pen(outline_color, 2))
         dc.DrawBitmap(background_image, 0, 0)
+        dc.SetTextForeground(foreground_color)
+        dc.SetFont(self.title_font)
+        dc.DrawText("分数配置文件", 200, 220)
+        dc.DrawText("分数单位设置", 200, 400)
+        dc.DrawBitmap(self.back_image, self.back_rect.x, self.back_rect.y)
+
         dc.SetTextForeground("#000000")
         dc.SetFont(self.text_font)
-        dc.DrawText("分数单位", 120, 220)
-        dc.DrawText("分数配置", 120, 260)
+        dc.DrawText("当前使用的分数配置文件：", 200, 278)
+        dc.DrawText("是否使用自定义分数单位：", 200, 458)
+
+        if self.settings_unit_choice.GetSelection() == 0:
+            dc.DrawText("1　　　　　　　　=　　　　　　　　分", 400, 495)
+            dc.DrawRoundedRectangle(420, 490, 100, 30, 10)
+            dc.DrawRoundedRectangle(560, 490, 100, 30, 10)
 
     def on_unit_choice(self, event):
-        global unit
-        unit = Unit(self.settings_unit_choice.GetSelection())
+        if self.settings_unit_choice.GetSelection() == 0:
+            self.unit_ctrl.Show()
+            self.unit_score_ctrl.Show()
+        else:
+            self.unit_ctrl.Hide()
+            self.unit_score_ctrl.Hide()
+        self.RefreshRect(wx.Rect(200, 458, 500, 200))
 
     def on_config_choice(self, event):
         global config
         config = self.settings_config_choice.GetSelection()
+    
+    def on_left_up(self, event):
+        pos = event.GetPosition()
+        if self.back_rect.Contains(pos):
+            self.on_back_clicked()
 
-    def on_back_clicked(self, event):
+    def on_back_clicked(self):
+        global unit, unit_score, use_special_unit
+        if self.settings_unit_choice.GetSelection() == 0:
+            if self.unit_ctrl.GetValue() != "" and self.unit_score_ctrl.GetValue != "0":
+                unit = self.unit_ctrl.GetValue()
+                unit_score = int(self.unit_score_ctrl.GetValue())
+                use_special_unit = True
+        else:
+            use_special_unit = False
+
         if self.last_config != config:
             self.last_config = config
             self.Parent.close_settings(True)
         else:
             self.Parent.close_settings(False)
 
+    def on_text(self, event):
+        text_ctrl = event.GetEventObject()
+        value = text_ctrl.GetValue()
+        if not value:
+            text_ctrl.SetValue("0")
+            text_ctrl.SetForegroundColour("#808080")
+        else:
+            if value == "0":
+                text_ctrl.SetForegroundColour("#808080")
+            else:
+                text_ctrl.SetForegroundColour("#000000")
+
+    def on_char(self, event):
+        text_ctrl = event.GetEventObject()
+        current_value = text_ctrl.GetValue()
+        new_char = chr(event.GetKeyCode())
+        if new_char.isdigit():
+            if current_value == "0":
+                text_ctrl.SetValue(new_char)
+                text_ctrl.SetInsertionPointEnd()
+            elif len(current_value) < 5:
+                event.Skip()
+        elif event.GetKeyCode() in [wx.WXK_CONTROL_A, wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_HOME, wx.WXK_END, wx.WXK_TAB]:
+            event.Skip()
+
 class InformationPanel(wx.Panel):
     def __init__(self, parent):
         super(InformationPanel, self).__init__(parent, style=wx.BORDER_NONE)
 
         self.SetBackgroundColour(background_color)
-        self.settings_image = wx.Image(resource_path(f"images/back.png"), wx.BITMAP_TYPE_ANY)
-        self.settings_image = self.settings_image.Scale(32, 32)
-        self.settings_image = wx.Bitmap(self.settings_image)
-        self.settings_icon = wx.StaticBitmap(self, bitmap=self.settings_image, pos=(70, 170))
-        self.settings_icon.Bind(wx.EVT_LEFT_UP, self.on_back_clicked)
+        self.back_image = wx.Bitmap(resource_path(f"images/back.png"), wx.BITMAP_TYPE_ANY)
+        self.back_rect = wx.Rect(70, 170, 40, 40)
+        self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
+        self.Bind(wx.EVT_MOTION, self.on_mouse_move)
 
         self.title_font = wx.Font(25, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "标小智无界黑")
-        self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
+        self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
 
         self.links = []
+        self.friend_image = []
+        self.friend_image_rect = []
         posx, posy = 200, 270
         for i in range(len(friend_link)):
-            link = ADV.HyperlinkCtrl(self, id=wx.ID_ANY, label=friend_link[i][0], url=friend_link[i][1], pos=(posx, posy))
+            self.friend_image.append(wx.Bitmap(resource_path(f"images/{friend_link[i][2]}.png"), wx.BITMAP_TYPE_ANY))
+            self.friend_image_rect.append(wx.Rect(posx, posy, 128, 128))
+
+            link = ADV.HyperlinkCtrl(self, id=wx.ID_ANY, label=friend_link[i][0], url=friend_link[i][1])
+            x, y = posx + 55, posy + 135
+            x -= link.GetSize().width // 2
+            link.SetPosition((x, y))
             link.SetFont(self.text_font)
             link.SetBackgroundColour(fake_background)
             link.SetSize(wx.Size(link.GetTextExtent(friend_link[i][0])))
             self.links.append(link)
-            posy += 30
+            posx += 180
 
-        posx, posy = 500, 270
+        posx, posy = 200, 550
         for i in range(len(relative_link)):
             link = ADV.HyperlinkCtrl(self, id=wx.ID_ANY, label=relative_link[i][0], url=relative_link[i][1], pos=(posx, posy))
             link.SetFont(self.text_font)
@@ -244,10 +326,10 @@ class InformationPanel(wx.Panel):
             self.links.append(link)
             posy += 30
 
-        posy = 270
+        posy = 550
         self.credit_label = []
         for key, value in credits_link.items():
-            posx = 800
+            posx = 600
             label = wx.StaticText(self, label=key, pos=(posx, posy))
             label.SetBackgroundColour(fake_background)
             label.SetFont(self.text_font)
@@ -273,10 +355,35 @@ class InformationPanel(wx.Panel):
         dc.SetTextForeground(foreground_color)
         dc.SetFont(self.title_font)
         dc.DrawText("友情链接", 200, 220)
-        dc.DrawText("相关链接", 500, 220)
-        dc.DrawText("制作人员", 800, 220)
+        dc.DrawText("相关链接", 200, 500)
+        dc.DrawText("制作人员", 600, 500)
+        dc.DrawBitmap(self.back_image, self.back_rect.x, self.back_rect.y)
 
-    def on_back_clicked(self, event):
+        for i in range(len(friend_link)):
+            dc.DrawBitmap(self.friend_image[i], self.friend_image_rect[i].x, self.friend_image_rect[i].y)
+    
+    def on_left_up(self, event):
+        pos = event.GetPosition()
+        if self.back_rect.Contains(pos):
+            self.on_back_clicked()
+        else:
+            for i in range(len(friend_link)):
+                if self.friend_image_rect[i].Contains(pos):
+                    webbrowser.open(friend_link[i][1])
+    
+    def on_mouse_move(self, event):
+        pos = event.GetPosition()
+        inRect = False
+        for i in range(len(friend_link)):
+            if self.friend_image_rect[i].Contains(pos):
+                inRect = True
+                break
+        if inRect:
+            self.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        else:
+            self.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
+
+    def on_back_clicked(self):
         self.Parent.close_information()
 
 class BattlePanel():
@@ -285,7 +392,7 @@ class BattlePanel():
         self.rect = rect
         
         self.list = []
-        self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
+        self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
         self.highlight = -1
         self.true_highlight = -1
 
@@ -328,26 +435,23 @@ class CalcPanel(wx.Panel):
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
         self.is_mouse_down = False
-        text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
+        text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
         self.final_font = wx.Font(35, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Novecento Wide Medium")
-        self.final_unit_font = wx.Font(15, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
-        bigger_text_font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
-        self.bold_text_font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, "Microsoft YaHei UI")
+        self.final_unit_font = wx.Font(15, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
+        bigger_text_font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
+        self.bold_text_font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, "HarmonyOS Sans SC")
         self.text_font = text_font
         self.title_font = wx.Font(25, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "标小智无界黑")
-        self.button_text_font = wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Microsoft YaHei UI")
+        self.button_text_font = wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
 
-        self.settings_image = wx.Image(resource_path(f"images/settings.png"), wx.BITMAP_TYPE_ANY)
-        self.settings_image = self.settings_image.Scale(32, 32)
-        self.settings_image = wx.Bitmap(self.settings_image)
-        self.settings_icon = wx.StaticBitmap(self, bitmap=self.settings_image, pos=(1080, 100))
-        self.settings_icon.Bind(wx.EVT_LEFT_UP, self.on_settings_clicked)
+        self.settings_image = wx.Bitmap(resource_path(f"images/settings.png"), wx.BITMAP_TYPE_ANY)
+        self.settings_rect = wx.Rect(1110, 100, 40, 40)
 
-        self.information_image = wx.Image(resource_path(f"images/information.png"), wx.BITMAP_TYPE_ANY)
-        self.information_image = self.information_image.Scale(32, 32)
-        self.information_image = wx.Bitmap(self.information_image)
-        self.information_icon = wx.StaticBitmap(self, bitmap=self.information_image, pos=(1140, 100))
-        self.information_icon.Bind(wx.EVT_LEFT_UP, self.on_information_clicked)
+        self.information_image = wx.Bitmap(resource_path(f"images/information.png"), wx.BITMAP_TYPE_ANY)
+        self.information_rect = wx.Rect(1170, 100, 40, 40)
+
+        self.delete_image = wx.Bitmap(resource_path(f"images/delete.png"), wx.BITMAP_TYPE_ANY)
+        self.delete_rect = wx.Rect(1168, 205, 37, 26)
 
         # 挑战分数
         self.challenge_text_ctrl = []
@@ -407,9 +511,9 @@ class CalcPanel(wx.Panel):
         self.settlement_ctrl.Bind(wx.EVT_CHAR, self.on_char)
 
         # 关卡分数一览
-        self.battle_total_delete_button = wx.Button(self, label="删除", pos=(1100, 203), size=(80, 35))
-        self.battle_total_delete_button.SetFont(bigger_text_font)
-        self.battle_total_delete_button.Bind(wx.EVT_BUTTON, self.on_delete)
+        # self.battle_total_delete_button = wx.Button(self, label="删除", pos=(1100, 203), size=(80, 35))
+        # self.battle_total_delete_button.SetFont(bigger_text_font)
+        # self.battle_total_delete_button.Bind(wx.EVT_BUTTON, self.on_delete)
         self.list_ctrl = BattlePanel(self, wx.Rect(875, 260, 320, 530))
 
         self.calc_text = "0"
@@ -423,7 +527,7 @@ class CalcPanel(wx.Panel):
     def on_paint(self, event):
         dc = wx.PaintDC(self)
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        dc.SetPen(wx.Pen(foreground_color, 1))
+        dc.SetPen(wx.Pen(outline_color, 2))
         dc.DrawBitmap(background_image, 0, 0)
         dc.DrawRoundedRectangle(40, 240, 350, 255, 20) # 挑战分数
         dc.DrawRoundedRectangle(40, 570, 350, 225, 20) # 结局分数
@@ -431,6 +535,9 @@ class CalcPanel(wx.Panel):
         dc.DrawRoundedRectangle(450, 640, 350, 155, 20) # 总得分
         dc.DrawRoundedRectangle(860, 240, 350, 555, 20) # 关卡分数一览
         dc.DrawRoundedRectangle(630, 563, 170, 40, 20) # 结算分数
+        dc.DrawBitmap(self.settings_image, self.settings_rect.x, self.settings_rect.y)
+        dc.DrawBitmap(self.information_image, self.information_rect.x, self.information_rect.y)
+        dc.DrawBitmap(self.delete_image, self.delete_rect.x, self.delete_rect.y)
 
         dc.SetTextForeground(foreground_color)
         dc.SetFont(self.title_font)
@@ -476,15 +583,15 @@ class CalcPanel(wx.Panel):
         dc.SetFont(self.bold_text_font)
         dc.DrawText("总分！", 605, 675)
 
-        dc.SetTextForeground("#B7D5F7")
+        dc.SetTextForeground(outline_color)
         dc.SetFont(self.final_font)
         w, h = dc.GetTextExtent(self.calc_text)
         x, y = 625 - w // 2, 725 - h // 2
         dc.DrawText(self.calc_text, x, y)
-        if unit == Unit.ZONG:
+        if use_special_unit:
             dc.SetFont(self.final_unit_font)
             x, y = 627 + w // 2, 716
-            dc.DrawText("棕", x, y)
+            dc.DrawText(unit, x, y)
 
     def init_challenge(self):
         for text_ctrl in self.challenge_text_ctrl:
@@ -540,7 +647,7 @@ class CalcPanel(wx.Panel):
             if current_value == "0":
                 text_ctrl.SetValue(new_char)
                 text_ctrl.SetInsertionPointEnd()
-            elif len(current_value) < 4:
+            elif len(current_value) < 5:
                 event.Skip()
         elif event.GetKeyCode() in [wx.WXK_CONTROL_A, wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_HOME, wx.WXK_END, wx.WXK_TAB]:
             event.Skip()
@@ -648,7 +755,7 @@ class CalcPanel(wx.Panel):
             self.list_ctrl.add_item(battle_name, str(int(battle_total)))
             self.calc()
     
-    def on_delete(self, event):
+    def on_delete(self):
         self.list_ctrl.delete_item()
         self.calc()
 
@@ -711,10 +818,10 @@ class CalcPanel(wx.Panel):
 
         total += self.list_ctrl.get_total_score()
 
-        if unit == Unit.BASE:
+        if not use_special_unit:
             self.calc_text = str(int(total))
         else:
-            self.calc_text = f"{total / 21.0:.2f}"
+            self.calc_text = f"{total * 1. / unit_score:.2f}"
         
         self.RefreshRect(wx.Rect(475, 600, 290, 200))
     
@@ -746,11 +853,6 @@ class CalcPanel(wx.Panel):
     
     def on_left_down(self, event):
         pos = event.GetPosition()
-        x, y = pos
-
-        if self.list_ctrl.rect.Contains(event.GetPosition()):
-            self.list_ctrl.true_highlight = self.list_ctrl.highlight
-            self.list_ctrl.refresh()
 
         if self.hint_rect.Contains(pos):
             self.mouse_is_down = True
@@ -759,6 +861,18 @@ class CalcPanel(wx.Panel):
         event.Skip()
 
     def on_left_up(self, event):
+        pos = event.GetPosition()
+
+        if self.list_ctrl.rect.Contains(pos):
+            self.list_ctrl.true_highlight = self.list_ctrl.highlight
+            self.list_ctrl.refresh()
+        elif self.settings_rect.Contains(pos):
+            self.Parent.open_settings()
+        elif self.information_rect.Contains(pos):
+            self.Parent.open_information()
+        elif self.delete_rect.Contains(pos):
+            self.on_delete()
+
         self.mouse_is_down = False
         self.timer.Stop()
         event.Skip()
@@ -792,6 +906,7 @@ class CalcFrame(wx.Frame):
 
         init_settings()
         self.SetIcon(wx.Icon(resource_path("images/巴别塔.ico")))
+        self.SetBackgroundColour(fake_background)
         self.calc_panel = CalcPanel(self)
         self.settings_panel = SettingsPanel(self)
         self.information_panel = InformationPanel(self)
@@ -801,8 +916,8 @@ class CalcFrame(wx.Frame):
     def open_settings(self):
         self.settings_panel.Show()
         self.calc_panel.Hide()
-        self.Sizer.Remove(0)
         self.Sizer.Add(self.settings_panel, 1, wx.EXPAND)
+        self.Sizer.Remove(0)
         self.Layout()
     
     def close_settings(self, reset=False):
