@@ -1,4 +1,4 @@
-from enum import Enum
+import random
 import math
 import wx
 import wx.lib.agw.ultimatelistctrl as ULC
@@ -20,37 +20,20 @@ unique_challenge_score = []
 boss_score = []
 boss_selected = [0] * 12
 boss_image_names = [
-    "boss_4",
-    "boss_3",
-    "boss_2",
-    "boss_1",
-    "boss_4",
-    "boss_3",
-    "boss_2",
-    "collection_1",
-    "collection_2",
-    "collection_3",
-    "collection_4",
-    "collection_5"
+    "b-7-b",
+    "b-6-b",
+    "b-5-b",
+    "b-4-b",
+    "b-7",
+    "b-6",
+    "b-5",
+    "r-1",
+    "r-2",
+    "r-3",
+    "r-4",
+    "r-5"
 ]
 boss_images = []
-boss_text = [
-    "迈入永恒",
-    "　哨兵　",
-    "虚无之偶",
-    "深寒造像",
-    "时光之沙",
-    "　园丁　",
-    "萨米之熵",
-    "无垠赠礼",
-    "维度流质",
-    "坍缩之种",
-    "空间碎片",
-    "深度灼痕"
-]
-boss_extra_text = "　通关\n"
-boss_base_text = "　进入\n"
-collection_extra_text = "　持有\n"
 two_ending = 0
 three_ending = 0
 both_three_four_ending = 0
@@ -127,7 +110,54 @@ if os.name == 'nt':
     GDI32.AddFontResourceExW(resource_path('font/HARMONYOS_SANS_SC_REGULAR.TTF'), 0x10, None)
 
 def init_settings():
-    global boss_score, battle_score, battle_special_score, two_ending, three_ending, both_three_four_ending
+    global challenge_text, unique_challenge_text, special_extra_title, special_extra_score, boss_score, battle_score, battle_special_score, two_ending, three_ending, both_three_four_ending
+    if config == 2:
+        challenge_text = ["隐藏敌人（鸭、熊、狗）", "四层失与得紧急作战", "五层失与得紧急作战", "黑色足迹紧急作战", "未抓取软Ban干员数量"]
+        challenge_score.clear()
+        unique_challenge_text = ["全程未取过钱", "全程未进过树篱之途"]
+        unique_challenge_score.clear()
+        special_extra_score.clear()
+
+        for i in range(len(challenge_text)):
+            challenge_score.append(random.randint(0, 300))
+        for i in range(len(unique_challenge_text)):
+            unique_challenge_score.append(random.randint(0, 300))
+        boss_score.clear()
+        for i in range(12):
+            boss_score.append(random.randint(0, 300))
+
+        for lst in battle_names:
+            for name in lst:
+                battle_score[name] = random.randint(0, 300)
+        for name in battle_special_names:
+            r = random.randint(0, 300)
+            battle_special_score[name] = [int(r * 1.2), r]
+
+        two_ending = random.randint(0, 300)
+        three_ending = random.randint(0, 300)
+        both_three_four_ending = random.randint(0, 300)
+        special_extra_title = {
+            "冰海疑影": ["1个污染躯壳", "17个污染躯壳"],
+            "人造物狂欢节": ["0个突击动力甲", "1个突击动力甲", "2个突击动力甲"],
+            "乐理之灾": ["3个小提琴家", "4个小提琴家"],
+            "黄沙幻境": ["西/北风向", "东/南风向"],
+            "英雄无名": ["击杀0个", "击杀1个", "击杀2个", "击杀3个", "击杀4个", "击杀5个", "击杀6个"]
+        }
+        special_extra_score["17个污染躯壳"] = random.randint(0, 300)
+        r = random.randint(0, 300)
+        special_extra_score["1个突击动力甲"] = r
+        special_extra_score["2个突击动力甲"] = r * 2
+        special_extra_score["4个小提琴家"] = random.randint(0, 300)
+        special_extra_score["东/南风向"] = random.randint(0, 300)
+        r = random.randint(0, 300)
+        special_extra_score["击杀1个"] = r
+        special_extra_score["击杀2个"] = r * 2
+        special_extra_score["击杀3个"] = r * 3
+        special_extra_score["击杀4个"] = r * 4
+        special_extra_score["击杀5个"] = r * 5
+        special_extra_score["击杀6个"] = r * 6
+        return True
+
     with open(resource_path(config_path[config]), 'r', encoding='utf-8') as file:
         data = json.load(file)
         challenge_text.clear()
@@ -174,7 +204,7 @@ class SettingsPanel(wx.Panel):
         self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
         self.title_font = wx.Font(25, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "标小智无界黑")
 
-        self.settings_config_choice = wx.Choice(self, choices=["标准配置", "测试配置"], pos=(400, 275), size=(100, 30))
+        self.settings_config_choice = wx.Choice(self, choices=["标准配置", "测试配置", "随机配置"], pos=(400, 275), size=(100, 30))
         self.settings_config_choice.SetSelection(config)
         self.settings_config_choice.SetFont(self.text_font)
         self.settings_config_choice.Bind(wx.EVT_CHOICE, self.on_config_choice)
@@ -253,7 +283,7 @@ class SettingsPanel(wx.Panel):
         else:
             use_special_unit = False
 
-        if self.last_config != config:
+        if self.last_config != config or config == 2:
             self.last_config = config
             self.Parent.close_settings(True)
         else:
@@ -792,21 +822,6 @@ class CalcPanel(wx.Panel):
             image = wx.Bitmap(width, height)
             dc = wx.MemoryDC(image)
             dc.DrawBitmap(wx.Bitmap(boss_images[i]), 0, 0)
-            dc.SetTextForeground("#FFFFFF")
-            dc.SetFont(self.button_text_font)
-            text = boss_text[i]
-            tw, th = dc.GetTextExtent(text)
-            if boss_selected[i] == 1:
-                text = boss_base_text + text
-                th *= 2
-            elif boss_selected[i] == 2:
-                if i < 7:
-                    text = boss_extra_text + text
-                else:
-                    text = collection_extra_text + text
-                th *= 2
-            dc.DrawText(text, (width - tw) // 2, height - th - 2)
-            del dc
 
             image = image.ConvertToImage()
             alpha = 85 * (boss_selected[i] + 1)
