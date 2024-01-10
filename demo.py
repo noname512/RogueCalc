@@ -8,6 +8,7 @@ import sys, os
 import ctypes
 import webbrowser
 
+title_text = "通天联赛计算器 by 巴别塔攻略组  |  "
 background_color = "#F3F3F3"
 foreground_color = "#276CBC"
 fake_background = "#F9FAFC"
@@ -89,8 +90,8 @@ unit = ""
 unit_score = 1
 config = 0
 config_path = [
-    "settings/demo.json",
-    "settings/demo2.json"
+    "settings/formal.json",
+    "settings/firstinitial.json"
 ]
 
 def resource_path(relative_path):
@@ -204,13 +205,13 @@ class SettingsPanel(wx.Panel):
         self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
         self.title_font = wx.Font(25, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "标小智无界黑")
 
-        self.settings_config_choice = wx.Choice(self, choices=["标准配置", "测试配置", "随机配置"], pos=(400, 275), size=(100, 30))
+        self.settings_config_choice = wx.Choice(self, choices=["正赛分数配置", "海选分数配置", "随机分数配置"], pos=(400, 275), size=(120, 30))
         self.settings_config_choice.SetSelection(config)
         self.settings_config_choice.SetFont(self.text_font)
         self.settings_config_choice.Bind(wx.EVT_CHOICE, self.on_config_choice)
         self.last_config = config
 
-        self.settings_unit_choice = wx.Choice(self, choices=yes_no_choice, pos=(400, 455), size=(100, 30))
+        self.settings_unit_choice = wx.Choice(self, choices=yes_no_choice, pos=(400, 455), size=(120, 30))
         self.settings_unit_choice.SetSelection(1 - int(use_special_unit))
         self.settings_unit_choice.SetFont(self.text_font)
         self.settings_unit_choice.Bind(wx.EVT_CHOICE, self.on_unit_choice)
@@ -267,7 +268,8 @@ class SettingsPanel(wx.Panel):
     def on_config_choice(self, event):
         global config
         config = self.settings_config_choice.GetSelection()
-    
+        self.Parent.Title = title_text + self.settings_config_choice.GetStringSelection()
+
     def on_left_up(self, event):
         pos = event.GetPosition()
         if self.back_rect.Contains(pos):
@@ -990,6 +992,6 @@ if __name__ == "__main__":
     app = wx.App(False)
     global background_image
     background_image = wx.Bitmap(resource_path("images/background.jpg"), wx.BITMAP_TYPE_ANY)
-    window = CalcFrame(None, "通天联赛计算器 demo by 巴别塔攻略组")
+    window = CalcFrame(None, title_text + "正赛分数配置")
     window.Show()
     app.MainLoop()
