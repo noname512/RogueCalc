@@ -64,12 +64,12 @@ battle_special_score = dict() # [无漏，非无漏]
 special_extra_title = dict()
 special_extra_score = dict()
 friend_link = [
-    ("tomimi", "https://tomimi.cyou/zh/sami", "tomimi"),
+    ("TOMIMI", "https://tomimi.cyou/zh/sami", "tomimi"),
     ("DPS计算器", "https://viktorlab.cn/akdata/dps/", "dpscalc"),
-    ("PRTS MAP", "https://mapcn.ark-nights.com/areas/rogue_3", "prtsmap")
+    ("PRTS.Maps", "https://mapcn.ark-nights.com/areas/rogue_3", "prtsmap")
 ]
 relative_link = [
-    ("UP主应援计划", "https://www.bilibili.com/blackboard/activity-oc3CbeDPRR.html"),
+    # ("激励计划动态", "https://www.bilibili.com/blackboard/activity-oc3CbeDPRR.html"),
     ("比赛直播间", "https://live.bilibili.com/22476160")
 ]
 credits_link = {
@@ -79,9 +79,6 @@ credits_link = {
     "美术：" : [
         ("里雪りあ", "https://space.bilibili.com/1684845011"),
         ("無冕Crownless", "https://space.bilibili.com/12786648")
-    ],
-    "规则：" : [
-
     ]
 }
 
@@ -568,9 +565,6 @@ class CalcPanel(wx.Panel):
         self.settlement_ctrl.Bind(wx.EVT_CHAR, self.on_char)
 
         # 关卡分数一览
-        # self.battle_total_delete_button = wx.Button(self, label="删除", pos=(1100, 203), size=(80, 35))
-        # self.battle_total_delete_button.SetFont(bigger_text_font)
-        # self.battle_total_delete_button.Bind(wx.EVT_BUTTON, self.on_delete)
         self.list_ctrl = BattlePanel(self, wx.Rect(875, 260, 320, 530))
 
         self.calc_text = "0"
@@ -852,11 +846,11 @@ class CalcPanel(wx.Panel):
             if boss_selected[i] == 2:
                 boss_cnt += 1
         if boss_cnt == 3:
-            total += 100
+            total += three_ending
         if boss_cnt >= 2:
-            total += 200
+            total += two_ending
         if boss_selected[0] + boss_selected[4] >= 2 and boss_selected[1] + boss_selected[5] >= 2:
-            total += 100
+            total += both_three_four_ending
 
         total += self.list_ctrl.get_total_score()
 
