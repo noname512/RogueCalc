@@ -1,4 +1,4 @@
-const challengeScore = [10, 30, 70, 30, 25, 66, 150];
+const challengeScore = [10, 30, 80, 30, 25, 66, 200];
 const bossScore = [230, 360, 220, 170, 180, 10, 160, 30, 30, 20, 20, 10];
 const battleLevels = ["一层", "二层", "三层", "四层", "五层", "六层"];
 const battleNames = [
@@ -23,7 +23,7 @@ const battleScore = {
     "何处无山海": 50,
     "生人勿近": 40,
     "霜与沙": 50,
-    "生灵的终点": 80
+    "生灵的终点": 90
 };
 const battleSpecialName = ["呼吸", "大地醒转", "夺树者", "黄沙幻境", "天途半道", "惩罚", "豪华车队", "英雄无名", "正义使者", "亘古仇敌"];
 const battleSpecialScore = {
@@ -58,8 +58,8 @@ const specialExtraScore = {
     "击杀5个" : 75,
     "击杀6个" : 90
 }
-const twoEnding = 100;
-const threeEnding = 200;
+const twoEnding = 200;
+const threeEnding = 100;
 const bothThreeFourEnding = 100;
 var bossSelected = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var highlightedRow = null;
