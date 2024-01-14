@@ -70,13 +70,12 @@ function add() {
     if (nameChoice.selectedIndex == -1) return;
     const name = nameChoice[nameChoice.selectedIndex].text;
     let total = 0;
+    let times = 1.0;
     if (type == 0) {
         if (name in battleScore) total += battleScore[name];
         if (document.getElementById('choice-bat-4').selectedIndex == 0) total += 20;
-        let times = 1.0;
         if (document.getElementById('choice-bat-3').selectedIndex == 0) times += 0.2;
         if (document.getElementById('choice-bat-5').selectedIndex == 0) times -= 0.7;
-        total *= times;
     } else if (type == 1) {
         total = battleSpecialScore[name][document.getElementById('choice-bat-3').selectedIndex];
     }
@@ -85,6 +84,7 @@ function add() {
         const specialTitle = specialChoice[specialChoice.selectedIndex].text;
         if (specialTitle in specialExtraScore) total += specialExtraScore[specialTitle];
     }
+    total *= times;
 
     if (total > 0 && name != "") {
         console.log("新增战斗：" + name + "，得分为" + total);
@@ -258,7 +258,6 @@ function calc() {
         resultUnit.textContent = unitName.value;
         outp.textContent = (total * 1.0 / parseInt(unitScore.value)).toFixed(2);
         var rect = outp.getBoundingClientRect();
-        console.log("width = " + outp.offsetWidth);
         resultUnit.style.left = (rect.left + rect.width - 450) + "px";
     } else {
         resultUnit.textContent = "";

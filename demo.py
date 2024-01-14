@@ -779,17 +779,16 @@ class CalcPanel(wx.Panel):
     def on_confirm(self, event):
         battle_total = 0
         battle_name = self.battle_choice[2].GetStringSelection()
+        times = 1.0
         if self.battle_choice[0].GetSelection() == 0:
             if battle_name in battle_score.keys():
                 battle_total += battle_score[battle_name]
             if self.battle_choice[4].GetSelection() == 0:
                 battle_total += 20
-            times = 1.0
             if self.battle_choice[3].GetSelection() == 0:
                 times += 0.2
             if self.battle_choice[5].GetSelection() == 0:
                 times -= 0.7
-            battle_total *= times
         elif self.battle_choice[0].GetSelection() == 1:
             battle_total = battle_special_score[battle_name][self.battle_choice[3].GetSelection()]
         else:
@@ -797,6 +796,7 @@ class CalcPanel(wx.Panel):
         extra_item = self.battle_choice[6].GetStringSelection()
         if extra_item in special_extra_score.keys():
             battle_total += special_extra_score[extra_item]
+        battle_total *= times
 
         if battle_total > 0 and battle_name != "":
             print(f"新增战斗：{battle_name}，得分为{battle_total}")
