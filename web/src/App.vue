@@ -1,5 +1,6 @@
 <template>
     <div class="background" >
+        <p style="opacity: 0.5; position:fixed; right: 10px; bottom: 10px">版本号：v1.1</p>
         <div class="transparent-panel" id="panel">
             <img style="position:absolute; left:1172px; top: 205px" src="./assets/images/delete.png" alt="delete" @click="removeBattle()">
             <img style="position:absolute; left:45px; top: 60px" src="./assets/images/logo.png" alt="logo">

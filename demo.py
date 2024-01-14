@@ -8,6 +8,7 @@ import sys, os
 import ctypes
 import webbrowser
 
+version_text = "版本号：v1.1"
 title_text = "通天联赛计算器 by 巴别塔攻略组  |  "
 background_color = "#F3F3F3"
 foreground_color = "#276CBC"
@@ -252,6 +253,10 @@ class SettingsPanel(wx.Panel):
             dc.DrawText("1　　　　　　　　=　　　　　　　　分", 400, 495)
             dc.DrawRoundedRectangle(420, 490, 100, 30, 10)
             dc.DrawRoundedRectangle(560, 490, 100, 30, 10)
+        
+        dc.SetTextForeground("#808080")
+        dc.SetFont(self.text_font)
+        dc.DrawText(version_text, 1160, 840)
 
     def on_unit_choice(self, event):
         if self.settings_unit_choice.GetSelection() == 0:
@@ -388,6 +393,10 @@ class InformationPanel(wx.Panel):
 
         for i in range(len(friend_link)):
             dc.DrawBitmap(self.friend_image[i], self.friend_image_rect[i].x, self.friend_image_rect[i].y)
+        
+        dc.SetTextForeground("#808080")
+        dc.SetFont(self.text_font)
+        dc.DrawText(version_text, 1160, 840)
     
     def on_left_up(self, event):
         pos = event.GetPosition()
@@ -643,6 +652,10 @@ class CalcPanel(wx.Panel):
             dc.SetFont(self.final_unit_font)
             x, y = 627 + w // 2, 716
             dc.DrawText(unit, x, y)
+        
+        dc.SetTextForeground("#808080")
+        dc.SetFont(self.text_font)
+        dc.DrawText(version_text, 1160, 840)
 
     def init_challenge(self):
         for text_ctrl in self.challenge_text_ctrl:
