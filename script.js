@@ -219,6 +219,7 @@ function resetBossBtn() {
         else
             button.style.opacity = 0.5;
     }
+    calc();
 }
 
 function calc() {
