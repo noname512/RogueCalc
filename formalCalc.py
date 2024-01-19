@@ -8,7 +8,7 @@ import sys, os
 import ctypes
 import webbrowser
 
-version_text = "版本号：v1.2"
+version_text = "版本号：v1.3"
 title_text = "通天联赛计算器 by 巴别塔攻略组  |  "
 background_color = "#F3F3F3"
 foreground_color = "#276CBC"
@@ -22,14 +22,14 @@ unique_challenge_score = []
 boss_score = []
 boss_selected = [0] * 8
 boss_image_names = [
-    "b-7-b",
-    "b-6-b",
-    "b-5-b",
-    "b-4-b",
-    "b-7",
-    "b-6",
-    "b-5",
-    "r-1"
+    "b-7-b-1",
+    "b-6-b-1",
+    "b-5-b-1",
+    "b-4-b-1",
+    "b-7-1",
+    "b-6-1",
+    "b-5-1",
+    "r-1-1"
 ]
 boss_images = []
 two_ending = 0
@@ -66,7 +66,7 @@ friend_link = [
     ("PRTS.Maps", "https://mapcn.ark-nights.com/areas/rogue_3", "prtsmap")
 ]
 relative_link = [
-    # ("激励计划动态", "https://www.bilibili.com/blackboard/activity-oc3CbeDPRR.html"),
+    ("激励计划动态", "https://www.bilibili.com/opus/887498186491428869?spm_id_from=333.999.0.0"),
     ("比赛直播间", "https://live.bilibili.com/22476160")
 ]
 credits_link = {
@@ -117,7 +117,7 @@ def init_settings():
         for i in range(len(unique_challenge_text)):
             unique_challenge_score.append(random.randint(0, 300))
         boss_score.clear()
-        for i in range(12):
+        for i in range(8):
             boss_score.append(random.randint(0, 300))
 
         for lst in battle_names:
@@ -169,8 +169,8 @@ def init_settings():
         for key, value in mp.items():
             unique_challenge_text.append(key)
             unique_challenge_score.append(value)
-        boss_score = data.get("boss_score", [0] * 12)
-        if len(boss_score) != 12:
+        boss_score = data.get("boss_score", [0] * 8)
+        if len(boss_score) != 8:
             return False
         two_ending = data.get("two_ending", 0)
         three_ending = data.get("three_ending", 0)
@@ -184,7 +184,7 @@ def init_settings():
                 lst.append(key1)
                 special_extra_score[key1] = value1
             special_extra_title[key] = lst
-    
+
     return True
 
 class SettingsPanel(wx.Panel):
@@ -421,7 +421,7 @@ class BattlePanel():
     def __init__(self, parent : wx.Panel, rect):
         self.parent = parent
         self.rect = rect
-        
+
         self.list = []
         self.extra_list = []
         self.detail_list = []
@@ -577,7 +577,7 @@ class CalcPanel(wx.Panel):
         self.list_ctrl = BattlePanel(self, wx.Rect(875, 260, 320, 530))
 
         self.calc_text = "0"
-        self.calc_unit_text = "棕"
+        self.calc_unit_text = ""
         self.show_hint = False
         self.hint_rect = wx.Rect(450, 640, 350, 145)
 

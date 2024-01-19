@@ -8,7 +8,7 @@ import sys, os
 import ctypes
 import webbrowser
 
-version_text = "版本号：v1.1"
+version_text = "海选版本"
 title_text = "通天联赛计算器 by 巴别塔攻略组  |  "
 background_color = "#F3F3F3"
 foreground_color = "#276CBC"
@@ -45,7 +45,7 @@ battle_text = [
     "关卡名称",
     "是否无漏",
     "是否持有路网",
-    "是否有捕猎惩罚",
+    "捕猎平衡是否生效",
     "特殊加分"
 ]
 battle_isbanned = [False, True, True, False, False, False, True]
@@ -70,7 +70,7 @@ friend_link = [
     ("PRTS.Maps", "https://mapcn.ark-nights.com/areas/rogue_3", "prtsmap")
 ]
 relative_link = [
-    # ("激励计划动态", "https://www.bilibili.com/blackboard/activity-oc3CbeDPRR.html"),
+    ("激励计划动态", "https://www.bilibili.com/opus/887498186491428869?spm_id_from=333.999.0.0"),
     ("比赛直播间", "https://live.bilibili.com/22476160")
 ]
 credits_link = {
@@ -88,7 +88,6 @@ unit = ""
 unit_score = 1
 config = 0
 config_path = [
-    "settings/formal.json",
     "settings/firstinitial.json"
 ]
 
@@ -110,8 +109,8 @@ if os.name == 'nt':
 
 def init_settings():
     global challenge_text, unique_challenge_text, special_extra_title, special_extra_score, boss_score, battle_score, battle_special_score, two_ending, three_ending, both_three_four_ending
-    if config == 2:
-        challenge_text = ["隐藏敌人（鸭、熊、狗）", "四层失与得紧急作战", "五层失与得紧急作战", "黑色足迹紧急作战", "未抓取软Ban干员数量"]
+    if config == 1:
+        challenge_text = ["隐藏敌人（鸭、熊、狗）", "四层失与得紧急作战", "五层失与得紧急作战", "黑色足迹紧急作战", "阵容补偿干员数"]
         challenge_score.clear()
         unique_challenge_text = ["全程未取过钱", "全程未进过树篱之途"]
         unique_challenge_score.clear()
@@ -189,7 +188,7 @@ def init_settings():
                 lst.append(key1)
                 special_extra_score[key1] = value1
             special_extra_title[key] = lst
-    
+
     return True
 
 class SettingsPanel(wx.Panel):
@@ -203,7 +202,7 @@ class SettingsPanel(wx.Panel):
         self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
         self.title_font = wx.Font(25, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "标小智无界黑")
 
-        self.settings_config_choice = wx.Choice(self, choices=["正赛分数配置", "海选分数配置", "随机分数配置"], pos=(400, 275), size=(120, 30))
+        self.settings_config_choice = wx.Choice(self, choices=["海选分数配置", "随机分数配置"], pos=(400, 275), size=(120, 30))
         self.settings_config_choice.SetSelection(config)
         self.settings_config_choice.SetFont(self.text_font)
         self.settings_config_choice.Bind(wx.EVT_CHOICE, self.on_config_choice)
@@ -428,24 +427,28 @@ class BattlePanel():
         self.rect = rect
         
         self.list = []
+        self.extra_list = []
         self.detail_list = []
         self.text_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
         self.highlight = -1
         self.true_highlight = -1
 
-    def add_item(self, name, score, detail):
+    def add_item(self, name, extra_name, score, detail):
         self.list.append((name, score))
+        self.extra_list.append(extra_name)
         self.detail_list.append(detail)
         self.refresh()
     
     def remove_all_items(self):
         self.list.clear()
+        self.extra_list.clear()
         self.detail_list.clear()
         self.refresh()
     
     def delete_item(self):
         if self.true_highlight != -1 and self.true_highlight < len(self.list):
             self.list.pop(self.true_highlight)
+            self.extra_list.pop(self.true_highlight)
             self.detail_list.pop(self.true_highlight)
             self.true_highlight = -1
             self.refresh()
@@ -453,33 +456,34 @@ class BattlePanel():
     def update_highlight(self, index):
         if index != self.highlight:
             self.highlight = index
-            self.refresh()
+            # self.refresh()
     
     def refresh(self):
         self.parent.RefreshRect(self.rect)
     
     def recalc(self):
         for i in range(len(self.list)):
-            name = self.list[i][0]
+            name = self.detail_list[i][5]
             total = 0
             if self.detail_list[i][0] == 0:
                 if name in battle_score.keys():
                     total += battle_score[name]
-                if self.detail_list[i][2] == 0:
+                if self.detail_list[i][2] == 0 and boss_selected[7] > 0:
                     total += 20
                 times = 1.0
                 if self.detail_list[i][1] == 0:
                     times += 0.2
                 if self.detail_list[i][3] == 0:
                     times -= 0.7
-                total *= times
             else:
                 total = battle_special_score[name][self.detail_list[i][1]]
             extra_item = self.detail_list[i][4]
             if extra_item in special_extra_score.keys():
                 total += special_extra_score[extra_item]
+            total *= times
 
-            self.list[i] = (name, str(int(total)))
+            self.list[i] = (self.list[i][0], str(int(total)))
+        self.refresh()
 
     def get_total_score(self):
         ret = 0
@@ -505,7 +509,7 @@ class CalcPanel(wx.Panel):
         self.bold_text_font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, "HarmonyOS Sans SC")
         self.text_font = text_font
         self.title_font = wx.Font(25, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "标小智无界黑")
-        self.button_text_font = wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
+        self.small_text_font = wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "HarmonyOS Sans SC")
 
         self.settings_image = wx.Bitmap(resource_path(f"images/settings.png"), wx.BITMAP_TYPE_ANY)
         self.settings_rect = wx.Rect(1110, 80, 40, 40)
@@ -539,7 +543,7 @@ class CalcPanel(wx.Panel):
                 posx += 72
         self.boss_image_show()
 
-        # 关卡分数
+        # 关卡额外分数
         self.battle_label = []
         self.battle_choice = []
         posy = 255
@@ -573,11 +577,11 @@ class CalcPanel(wx.Panel):
         self.settlement_ctrl.Bind(wx.EVT_TEXT, self.on_text)
         self.settlement_ctrl.Bind(wx.EVT_CHAR, self.on_char)
 
-        # 关卡分数一览
+        # 关卡额外分数一览
         self.list_ctrl = BattlePanel(self, wx.Rect(875, 260, 320, 530))
 
         self.calc_text = "0"
-        self.calc_unit_text = "棕"
+        self.calc_unit_text = ""
         self.show_hint = False
         self.hint_rect = wx.Rect(450, 640, 350, 145)
 
@@ -591,9 +595,9 @@ class CalcPanel(wx.Panel):
         dc.DrawBitmap(background_image, 0, 0)
         dc.DrawRoundedRectangle(40, 240, 350, 255, 20) # 挑战分数
         dc.DrawRoundedRectangle(40, 570, 350, 225, 20) # 结局分数
-        dc.DrawRoundedRectangle(450, 240, 350, 295, 20) # 关卡分数
+        dc.DrawRoundedRectangle(450, 240, 350, 295, 20) # 关卡额外分数
         dc.DrawRoundedRectangle(450, 640, 350, 155, 20) # 总得分
-        dc.DrawRoundedRectangle(860, 240, 350, 555, 20) # 关卡分数一览
+        dc.DrawRoundedRectangle(860, 240, 350, 555, 20) # 关卡额外分数一览
         dc.DrawRoundedRectangle(630, 563, 170, 40, 20) # 结算分数
         dc.DrawBitmap(self.settings_image, self.settings_rect.x, self.settings_rect.y)
         dc.DrawBitmap(self.information_image, self.information_rect.x, self.information_rect.y)
@@ -603,9 +607,9 @@ class CalcPanel(wx.Panel):
         dc.SetFont(self.title_font)
         dc.DrawText("挑战分数", 40, 192)
         dc.DrawText("结局分数", 40, 522)
-        dc.DrawText("关卡分数", 450, 192)
+        dc.DrawText("关卡额外分数", 450, 192)
         dc.DrawText("结算分数", 450, 554)
-        dc.DrawText("关卡分数一览", 860, 192)
+        dc.DrawText("关卡额外分数一览", 860, 192)
 
         dc.SetTextForeground("#000000")
         dc.SetFont(self.text_font)
@@ -618,27 +622,30 @@ class CalcPanel(wx.Panel):
         dc.SetPen(wx.TRANSPARENT_PEN)
 
         x, y, w, h = self.list_ctrl.rect
-        if self.list_ctrl.highlight != -1:
-            liney = y + self.list_ctrl.highlight * 30 + 25
-            dc.DrawRectangle(x, liney - 25, w, 25)
 
         if self.list_ctrl.true_highlight != -1:
-            liney = y + self.list_ctrl.true_highlight * 30 + 25
-            dc.DrawRectangle(x, liney - 25, w, 25)
+            liney = y + self.list_ctrl.true_highlight * 50 - 5
+            dc.DrawRectangle(x, liney, w, 45)
             dc.SetPen(wx.Pen(foreground_color, 1))
-            dc.DrawLine(x, liney, x + w, liney)
+            dc.DrawLine(x, liney + 45, x + w, liney + 45)
 
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         dc.SetPen(wx.Pen(foreground_color, 1))
+
+        if self.show_hint:
+            dc.DrawText("长按重置", 465, 760)
 
         delty = 0
         for battle in self.list_ctrl.list:
             dc.DrawText(battle[0], x + 10, y + delty)
             dc.DrawText(battle[1], x + w - dc.GetTextExtent(battle[1]).GetWidth() - 10, y + delty)
-            delty += 30
+            delty += 50
 
-        if self.show_hint:
-            dc.DrawText("长按重置", 465, 760)
+        dc.SetFont(self.small_text_font)
+        delty = 22
+        for extra in self.list_ctrl.extra_list:
+            dc.DrawText(extra, x + 10, y + delty)
+            delty += 50
             
         dc.SetFont(self.bold_text_font)
         dc.DrawText("总分！", 605, 675)
@@ -650,7 +657,7 @@ class CalcPanel(wx.Panel):
         dc.DrawText(self.calc_text, x, y)
         if use_special_unit:
             dc.SetFont(self.final_unit_font)
-            x, y = 627 + w // 2, 716
+            x, y = 627 + w // 2, 720
             dc.DrawText(unit, x, y)
         
         dc.SetTextForeground("#808080")
@@ -792,33 +799,54 @@ class CalcPanel(wx.Panel):
     def on_confirm(self, event):
         battle_total = 0
         battle_name = self.battle_choice[2].GetStringSelection()
+        show_name = battle_name
+        extra_name = ""
         times = 1.0
         if self.battle_choice[0].GetSelection() == 0:
+            show_name = "紧急" + show_name
             if battle_name in battle_score.keys():
                 battle_total += battle_score[battle_name]
             if self.battle_choice[4].GetSelection() == 0:
-                battle_total += 20
-            if self.battle_choice[3].GetSelection() == 0:
-                times += 0.2
+                if boss_selected[7] > 0:
+                    battle_total += 20
+                if extra_name != "":
+                    extra_name += "，"
+                extra_name = extra_name + "路网"
             if self.battle_choice[5].GetSelection() == 0:
                 times -= 0.7
+                if extra_name != "":
+                    extra_name += "，"
+                extra_name = extra_name + "捕猎"
+            if self.battle_choice[3].GetSelection() == 0:
+                times += 0.2
+                if extra_name != "":
+                    extra_name += "，"
+                extra_name = extra_name + "无漏"
         elif self.battle_choice[0].GetSelection() == 1:
             battle_total = battle_special_score[battle_name][self.battle_choice[3].GetSelection()]
+            if self.battle_choice[3].GetSelection() == 0:
+                if extra_name != "":
+                    extra_name += "，"
+                extra_name = extra_name + "无漏"
         else:
             return
         extra_item = self.battle_choice[6].GetStringSelection()
         if extra_item in special_extra_score.keys():
             battle_total += special_extra_score[extra_item]
+            if extra_name != "":
+                extra_name += "，"
+            extra_name = extra_name + extra_item
         battle_total *= times
 
         if battle_total > 0 and battle_name != "":
             print(f"新增战斗：{battle_name}，得分为{battle_total}")
-            self.list_ctrl.add_item(battle_name, str(int(battle_total)), 
+            self.list_ctrl.add_item(show_name, extra_name, str(int(battle_total)), 
                                     (self.battle_choice[0].GetSelection(),
                                      self.battle_choice[3].GetSelection(),
                                      self.battle_choice[4].GetSelection(),
                                      self.battle_choice[5].GetSelection(),
-                                     self.battle_choice[6].GetStringSelection()))
+                                     self.battle_choice[6].GetStringSelection(),
+                                     battle_name))
             self.calc()
     
     def on_delete(self):
@@ -999,6 +1027,6 @@ if __name__ == "__main__":
     app = wx.App(False)
     global background_image
     background_image = wx.Bitmap(resource_path("images/background.jpg"), wx.BITMAP_TYPE_ANY)
-    window = CalcFrame(None, title_text + "正赛分数配置")
+    window = CalcFrame(None, title_text + "海选分数配置")
     window.Show()
     app.MainLoop()
