@@ -67,7 +67,8 @@ special_extra_score = dict()
 friend_link = [
     ("TOMIMI", "https://tomimi.cyou/zh/sami", "tomimi"),
     ("DPS计算器", "https://viktorlab.cn/akdata/dps/", "dpscalc"),
-    ("PRTS.Maps", "https://mapcn.ark-nights.com/areas/rogue_3", "prtsmap")
+    ("PRTS.Maps", "https://mapcn.ark-nights.com/areas/rogue_3", "prtsmap"),
+    ("明日方舟一图流", "https://ark.yituliu.cn", "yituliu")
 ]
 relative_link = [
     ("激励计划动态", "https://www.bilibili.com/opus/887498186491428869?spm_id_from=333.999.0.0"),
