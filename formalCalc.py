@@ -67,7 +67,7 @@ friend_link = [
     ("明日方舟一图流", "https://ark.yituliu.cn", "yituliu")
 ]
 relative_link = [
-    ("激励计划动态", "https://www.bilibili.com/opus/887498186491428869?spm_id_from=333.999.0.0"),
+    ("激励计划动态", "https://www.bilibili.com/opus/887498186491428869"),
     ("比赛直播间", "https://live.bilibili.com/22476160")
 ]
 credits_link = {
@@ -462,12 +462,12 @@ class BattlePanel():
         for i in range(len(self.list)):
             name = self.detail_list[i][5]
             total = 0
+            times = 1.0
             if self.detail_list[i][0] == 0:
                 if name in battle_score.keys():
                     total += battle_score[name]
                 if self.detail_list[i][2] == 0 and boss_selected[7] > 0:
                     total += 20
-                times = 1.0
                 if self.detail_list[i][1] == 0:
                     times += 0.2
                 if self.detail_list[i][3] == 0:
