@@ -1,0 +1,76 @@
+{
+    "title": {
+        "Information": "Game\nInformation",
+        "Squad": "Squad",
+        "EndingBonus": "Ending\nBonuses",
+        "SpecialBonus": "Special\nBonuses",
+        "StageBonus": "Stage\nBonuses",
+        "StageList": "Stage\nList",
+        "Match": "Match\nScores",
+        "Setting": "Setting",
+        "About": "About",
+        "LanguageChoose": "Choose Language"
+    },
+    "squad": {
+        "MadOverMatter": "Mad Over Matter Squad",
+        "PeopleOriented": "People-Oriented Squad",
+        "Tactical": "Tactical Operative",
+        "Others": "Other Squad"
+    },
+    "stage": {
+        "title": {
+            "Type": "Type",
+            "Floor": "Floor",
+            "Stage": "Stage",
+            "Extra": "Extra",
+            "NoLeak": "No Leak",
+            "None": "None"
+        },
+        "type": {
+            "Emergency": "Emergency ",
+            "Special": "Special"
+        },
+        "floor": {
+            "f3": "3rd Floor",
+            "f4": "4th Floor",
+            "f5": "5th Floor",
+            "f6": "6th Floor"
+        },
+        "stage": {
+            "BlazeOfGlory": "Blaze of Glory",
+            "CraftBrewerKiller": "Craft Brewer Killer",
+            "CrimeAndPunishment": "Crime and Punishment",
+            "DeepCognition": "Deep Cognition",
+            "HuntingGrounds": "Hunting Grounds",
+            "LookAheadAndLookBack": "Look Ahead and Look Back",
+            "MechanicalMenace": "Mechanical Menace",
+            "NetherseaBrandLand": "Nethersea Brand Land",
+            "OutOfControl": "Out of Control",
+            "PhalanxOfEmbers": "Phalanx of Embers",
+            "PistoleEOrdine": "Pistole e Ordine",
+            "PoolOfProcreation": "Pool of Procreation",
+            "PrecariousDefense": "Precariou's Defense",
+            "SanguinarchsLegacy": "Sanguinarch's Legacy",
+            "SeacavernSandstorm": "Seacavern Sandstorm",
+            "TerritorialTendencies": "Territorial Tendencies",
+            "TheFaithfulsUtopia": "The Faithful's Utopia",
+            "TheNest": "The Nest",
+            "ThePipersCall": "The Piper's Call",
+            "TheReveredAbyss": "The Revered Abyss",
+            "TheSpread": "The Spread",
+            "TroglodyteTribe": "Troglodyte Tribe",
+            "UbiBonaSomnia": "Ubi bona somnia",
+            "UndergroundAscension": "Underground Ascension",
+            "Vortex": "Vortex",
+            "WaterAndFireUnion": "Water and Fire Union",
+            "ANewDayANewDuck": "A New Day, A New Duck",
+            "Indecisiveness": "Indecisiveness",
+            "RightInTheKisser": "Right in the Kisser",
+            "SupervisionSite": "Supervision Site",
+            "TailBetweenLegs": "Tail Between Legs",
+            "FanaticalFlames": "Fanatical Flames",
+            "JoyFromABox": "\"Joy\" From a Box",
+            "Reality": "Reality"
+        }
+    }
+}

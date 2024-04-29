@@ -1,0 +1,57 @@
+{
+    "squad": {
+        "MadOverMatter": 1.3,
+        "PeopleOriented": 1.25,
+        "Tactical": 1.33,
+        "Others": 1.33
+    },
+    "stage": {
+        "Emergency": {
+            "f3": {
+                "CraftBrewerKiller": 10,
+                "CrimeAndPunishment": 10,
+                "LookAheadAndLookBack": 30,
+                "PrecariousDefense": 10,
+                "SanguinarchsLegacy": 30,
+                "TheNest": 30,
+                "TroglodyteTribe": 10,
+                "Vortex": 10
+            },
+            "f4": {
+                "BlazeOfGlory": 20,
+                "HuntingGrounds": 40,
+                "NetherseaBrandLand": 30,
+                "PistoleEOrdine": 30,
+                "SeacavernSandstorm": 30,
+                "TerritorialTendencies": 50,
+                "TheReveredAbyss": 20,
+                "UndergroundAscension": 20
+            },
+            "f5": {
+                "MechanicalMenace": 40,
+                "OutOfControl": 100,
+                "PhalanxOfEmbers": 60,
+                "PoolOfProcreation": 40,
+                "TheFaithfulsUtopia": 30,
+                "ThePipersCall": 30,
+                "TheSpread": 30,
+                "UbiBonaSomnia": 70
+            },
+            "f6": {
+                "DeepCognition": 60,
+                "WaterAndFireUnion": 100
+            }    
+        },
+        "Special": {
+            "Indecisiveness": 20,
+            "TailBetweenLegs": 30,
+            "RightInTheKisser": 30,
+            "SupervisionSite": 40,
+            "JoyFromABox": 40,
+            "FanaticalFlames": 80,
+            "Reality": 80,
+            "ANewDayANewDuck": 80
+        }
+    },
+    "special": [100, 50, 50]
+}

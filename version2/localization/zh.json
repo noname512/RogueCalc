@@ -1,0 +1,76 @@
+{
+    "title": {
+        "Information": "游戏信息",
+        "Squad": "分队",
+        "EndingBonus": "结局加分",
+        "SpecialBonus": "特殊加分",
+        "StageBonus": "关卡加分",
+        "StageList": "关卡一览",
+        "Match": "总分",
+        "Setting": "设置",
+        "About": "关于",
+        "LanguageChoose": "选择语言"
+    },
+    "squad": {
+        "MadOverMatter": "心胜于物分队",
+        "PeopleOriented": "以人为本分队",
+        "Tactical": "职业分队",
+        "Others": "其余分队"
+    },
+    "stage": {
+        "title": {
+            "Type": "关卡类型",
+            "Floor": "关卡层数",
+            "Stage": "关卡名称",
+            "Extra": "特殊加分",
+            "NoLeak": "无漏",
+            "None": "无"
+        },
+        "type": {
+            "Emergency": "紧急作战",
+            "Special": "特殊作战"
+        },
+        "floor": {
+            "f3": "三层",
+            "f4": "四层",
+            "f5": "五层",
+            "f6": "六层"
+        },
+        "stage": {
+            "BlazeOfGlory": "火之骄子",
+            "CraftBrewerKiller": "精酿杀手",
+            "CrimeAndPunishment": "除暴安良",
+            "DeepCognition": "深度认知",
+            "HuntingGrounds": "狩猎场",
+            "LookAheadAndLookBack": "瞻前顾后",
+            "MechanicalMenace": "机械之灾",
+            "NetherseaBrandLand": "溟痕乐园",
+            "OutOfControl": "失控",
+            "PhalanxOfEmbers": "余烬方阵",
+            "PistoleEOrdine": "铳与秩序",
+            "PoolOfProcreation": "育生池",
+            "PrecariousDefense": "据险固守",
+            "SanguinarchsLegacy": "大君遗脉",
+            "SeacavernSandstorm": "海窟沙暴",
+            "TerritorialTendencies": "领地意识",
+            "TheFaithfulsUtopia": "教徒居所",
+            "TheNest": "巢穴",
+            "ThePipersCall": "吹笛人的号召",
+            "TheReveredAbyss": "崇敬深海",
+            "TheSpread": "蔓延",
+            "TroglodyteTribe": "原始部落",
+            "UbiBonaSomnia": "好梦在何方",
+            "UndergroundAscension": "地下天途",
+            "Vortex": "漩涡",
+            "WaterAndFireUnion": "水火相容",
+            "ANewDayANewDuck": "鸭本运作",
+            "Indecisiveness": "犹豫不决",
+            "RightInTheKisser": "拳拳到肉",
+            "SupervisionSite": "监工现场",
+            "TailBetweenLegs": "抱头狗窜",
+            "FanaticalFlames": "狂信如火",
+            "JoyFromABox": "“喜”从箱来",
+            "Reality": "真相"
+        }
+    }
+}
